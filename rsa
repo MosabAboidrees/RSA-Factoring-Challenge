@@ -1,47 +1,107 @@
 #!/usr/bin/python3
-"""
-This script factorizes numbers read from a file into
-a product of two prime numbers. Each line in the file
-should contain one number to be factorized.
-"""
 
-import sys
+import random
+import math
 
 
-def factorize_numbers_from_file():
+def modular_pow(base, exponent, modulus):
     """
-    Reads a file specified by the command line argument
-    and factorizes each number
-    found in the file into two factors, where possible,
-    ensuring at least one factor is a prime number.
+    Efficiently computes (base^exponent) % modulus
+    using the right-to-left binary method.
+    Args:
+        base (int): The base of the exponentiation.
+        exponent (int): The exponent.
+        modulus (int): The modulus.
+    Returns:
+        int: The result of (base^exponent) % modulus.
     """
+    result = 1
+    while (exponent > 0):
+        # If exponent is odd, multiply the result
+        # by the current base mod modulus
+        if (exponent % 2 != 0):
+            result = (result * base) % modulus
+        # Divide exponent by 2
+        exponent = exponent // 2
+        # Square the base and mod by modulus
+        base = (base * base) % modulus
+    return result
+
+
+def prime_divisor(n):
+    """
+    Attempts to find a prime divisor of n using a variation
+    of Pollard's Rho algorithm.
+    Args:
+        n (int): The number to find a prime divisor for.
+    Returns:
+        int: A divisor of n. Returns n if no divisor found.
+    """
+    if (n == 1):
+        return n
+    if (n % 2 == 0):
+        return 2
+
+    # Randomly initialize x, y, and the constant c within bounds
+    x = random.randint(0, n - 2)
+    y = x
+    c = random.randint(1, n - 1)
+
+    d = 1
+    while (d == 1):
+        # Move x and y according to the function and
+        # calculate the gcd of |x-y| and n
+        x = (modular_pow(x, 2, n) + c + n) % n
+        y = (modular_pow(y, 2, n) + c + n) % n
+        y = (modular_pow(y, 2, n) + c + n) % n
+        d = math.gcd(abs(x - y), n)
+
+        # If d equals n, retry with different x, y, c
+        if (d == n):
+            return prime_divisor(n)
+    return d
+
+
+def print_factors(number):
+    """
+    Prints factors of a given number using the prime_divisor function.
+    Args:
+        number (int): The number to factorize.
+    """
+    divisor = prime_divisor(number)
+    complementary_divisor = number // divisor
+    # Ensure divisor is the smaller factor
+    if divisor >= complementary_divisor:
+        print("{:d}={:d}*{:d}".format(number, divisor, complementary_divisor))
+    else:
+        print("{:d}={:d}*{:d}".format(number, complementary_divisor, divisor))
+
+
+def main():
+    """
+    Main function to read numbers from a file and print their factors.
+    """
+    from sys import argv, exit, stderr
+
+    # Check for correct usage
+    if len(argv) != 2:
+        stderr.write("Usage: ./factors <file>\n")
+        exit()
+
     try:
-        # Retrieve the file name from command line arguments
-        file_name = sys.argv[1]
-        with open(file_name) as numbers_file:
-            # Iterate through each line in the file
-            for number_str in numbers_file:
-                num = int(number_str)
-                # Check if the number is even
-                if num % 2 == 0:
-                    print("{}={}*{}".format(num, num // 2, 2))
-                    continue
-                # Initialize factor search starting from 3 for odd numbers
-                pot_fac = 3
-                while pot_fac < numb // 2:
-                    # If a factor is found, print it and break the loop
-                    if num % pot_fac == 0:
-                        print("{}={}*{}".format(num, num // pot_fac, pot_fac))
-                        break
-                    potential_factor += 2
-                # If no factors found other than 1 and
-                # the number itself, print as prime
-                if potential_factor >= (number // 2) + 1:
-                    print("{}={}*{}".format(number, number, 1))
-    except IndexError:
-        # Handle the case where no file name
-        # is provided in the command line arguments
-        print("Usage: {} <file>".format(sys.argv[0]), file=sys.stderr)
+        # Attempt to open the specified file
+        file_handle = open(argv[1], "r")
+    except FileNotFoundError:
+        stderr.write("Could not find file {}, not exist\n".format(argv[1]))
+    else:
+        # Read each line, convert to an integer, and print its factors
+        while True:
+            line = file_handle.readline()
+            if not line:
+                break
+            number = int(line)
+            print_factors(number)
+    file_handle.close()
 
 
-factorize_numbers_from_file()
+main()
