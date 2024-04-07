@@ -22,7 +22,7 @@ def modular_pow(base, exponent, modulus):
         if (exponent % 2 != 0):
             result = (result * base) % modulus
         # Divide exponent by 2
-        exponent = exponent // 2
+        exponent = int(exponent / 2)
         # Square the base and mod by modulus
         base = (base * base) % modulus
     return result
@@ -69,7 +69,7 @@ def print_factors(number):
         number (int): The number to factorize.
     """
     divisor = prime_divisor(number)
-    complementary_divisor = number // divisor
+    complementary_divisor = int(number / divisor)
     # Ensure divisor is the smaller factor
     if divisor >= complementary_divisor:
         print("{:d}={:d}*{:d}".format(number, divisor, complementary_divisor))
@@ -95,12 +95,13 @@ def main():
         stderr.write("Could not find file {}, not exist\n".format(argv[1]))
     else:
         # Read each line, convert to an integer, and print its factors
-        while True:
+        while (True):
             line = file_handle.readline()
-            if not line:
+            if (not line):
                 break
             number = int(line)
             print_factors(number)
+
     file_handle.close()
 
 
